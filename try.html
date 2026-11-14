@@ -4,7 +4,523 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#fffffa">
+    <meta name="description" content="Sign in to EquinoxAI and explore ticker-specific stock-return predictions.">
     <title>EquinoxAI — Try it yourself</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #fffffa;
+        --ink: #191970;
+        --teal: #44a1a0;
+        --sky: #78cdd7;
+        --charcoal: #353531;
+        --muted: #727578;
+        --line: #e8e9e3;
+        --serif: Georgia, "Times New Roman", serif;
+        --sans: "Segoe UI", Arial, sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        background:
+          radial-gradient(ellipse at 82% 18%, rgba(120, 205, 215, .19), transparent 34rem),
+          var(--paper);
+        color: var(--charcoal);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+      button, input { font: inherit; }
+      .shell { width: min(1050px, calc(100% - 48px)); margin-inline: auto; }
+      .topbar {
+        height: 78px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(25, 25, 112, .09);
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--ink);
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -.6px;
+        text-decoration: none;
+      }
+      .brand-mark { width: 30px; height: 30px; }
+      .back-link {
+        color: #666b70;
+        font-size: 13px;
+        text-decoration: none;
+      }
+      .back-link:hover { color: var(--ink); }
+      main { padding-block: 70px 90px; }
+      .intro { max-width: 650px; margin: 0 auto 34px; text-align: center; }
+      .eyebrow {
+        margin: 0 0 15px;
+        color: var(--teal);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.8px;
+        text-transform: uppercase;
+      }
+      h1, h2, p { margin-top: 0; }
+      h1 {
+        margin-bottom: 14px;
+        color: var(--ink);
+        font-family: var(--serif);
+        font-size: clamp(40px, 6vw, 58px);
+        font-weight: 400;
+        letter-spacing: -2.6px;
+        line-height: 1.08;
+      }
+      .intro > p:last-child {
+        margin-bottom: 0;
+        color: #73777b;
+        font-size: 14px;
+        line-height: 1.75;
+      }
+      .panel {
+        width: min(100%, 560px);
+        margin-inline: auto;
+        padding: 32px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, .92);
+        box-shadow: 0 18px 55px rgba(36, 48, 65, .08);
+      }
+      .panel h2 {
+        margin-bottom: 8px;
+        color: var(--ink);
+        font-size: 18px;
+        font-weight: 650;
+      }
+      .panel-copy { margin-bottom: 23px; color: #7a7f82; font-size: 12px; line-height: 1.65; }
+      .auth-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+        margin-bottom: 22px;
+        padding: 4px;
+        border-radius: 5px;
+        background: #f2f4f0;
+      }
+      .auth-tab {
+        min-height: 38px;
+        border: 0;
+        border-radius: 4px;
+        background: transparent;
+        color: #73777b;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .auth-tab[aria-selected="true"] {
+        background: white;
+        box-shadow: 0 1px 5px rgba(25, 25, 112, .1);
+        color: var(--ink);
+      }
+      .field { margin-bottom: 17px; }
+      .field label {
+        display: block;
+        margin-bottom: 7px;
+        color: #50565a;
+        font-size: 11px;
+        font-weight: 650;
+      }
+      .field input {
+        width: 100%;
+        min-height: 45px;
+        padding: 0 12px;
+        border: 1px solid #dfe2df;
+        border-radius: 4px;
+        outline: none;
+        background: white;
+        color: var(--charcoal);
+        font-size: 13px;
+      }
+      .field input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(68, 161, 160, .13); }
+      .button {
+        min-height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        padding: 0 18px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        background: var(--ink);
+        color: white;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 650;
+        transition: background .2s ease, transform .2s ease;
+      }
+      .button:hover:not(:disabled) { transform: translateY(-1px); background: #22228c; }
+      .button:disabled { cursor: wait; opacity: .65; }
+      .button-full { width: 100%; margin-top: 4px; }
+      .button-secondary {
+        min-height: 37px;
+        border-color: #dfe2df;
+        background: white;
+        color: var(--ink);
+      }
+      .button-secondary:hover:not(:disabled) { background: #f7faf8; }
+      .message {
+        min-height: 18px;
+        margin: 14px 0 0;
+        color: #a13e35;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .message.success { color: #287c68; }
+      [hidden] { display: none !important; }
+      .app-panel { width: min(100%, 700px); }
+      .account-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 27px;
+        padding-bottom: 19px;
+        border-bottom: 1px solid #edf0ec;
+      }
+      .account-label { margin-bottom: 4px; color: #919698; font-size: 10px; text-transform: uppercase; letter-spacing: .9px; }
+      .account-name { margin: 0; color: var(--ink); font-size: 13px; font-weight: 650; }
+      .ticker-form { display: flex; align-items: end; gap: 11px; }
+      .ticker-form .field { flex: 1; margin: 0; }
+      .ticker-form .button { min-width: 130px; }
+      .ticker-hint { margin: 9px 0 0; color: #929799; font-size: 11px; }
+      .result {
+        margin-top: 26px;
+        padding: 22px;
+        border: 1px solid #e6ebe7;
+        border-radius: 6px;
+        background: linear-gradient(135deg, rgba(120, 205, 215, .11), rgba(255, 255, 250, .4) 60%);
+      }
+      .result-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .result-symbol { margin: 0; color: var(--ink); font-family: var(--serif); font-size: 25px; }
+      .action-badge {
+        padding: 7px 10px;
+        border-radius: 3px;
+        background: rgba(68, 161, 160, .12);
+        color: #287c68;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .7px;
+      }
+      .action-badge.sell { background: rgba(184, 85, 75, .1); color: #a13e35; }
+      .action-badge.neutral { background: #f0f1ed; color: #62676a; }
+      .result-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-top: 22px;
+      }
+      .metric { padding-top: 13px; border-top: 1px solid #e6ebe7; }
+      .metric span { display: block; margin-bottom: 6px; color: #898f91; font-size: 10px; }
+      .metric strong { color: var(--ink); font-size: 14px; font-weight: 650; }
+      .disclaimer { margin: 19px 0 0; color: #858b8e; font-size: 10px; line-height: 1.6; }
+      .loading { color: #777e81; font-size: 12px; text-align: center; }
+      footer { padding-block: 20px; border-top: 1px solid var(--line); color: #929799; font-size: 10px; text-align: center; }
+
+      @media (max-width: 600px) {
+        .shell { width: min(100% - 36px, 480px); }
+        .topbar { height: 68px; }
+        main { padding-block: 52px 65px; }
+        .intro { margin-bottom: 27px; }
+        h1 { letter-spacing: -1.8px; }
+        .panel { padding: 24px 20px; }
+        .ticker-form { align-items: stretch; flex-direction: column; }
+        .ticker-form .button { width: 100%; }
+        .result { padding: 18px; }
+        .result-grid { grid-template-columns: repeat(2, 1fr); gap: 13px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+      }
+    </style>
   </head>
-  <body></body>
+  <body>
+    <header class="shell topbar">
+      <a class="brand" href="/" aria-label="EquinoxAI home">
+        <svg class="brand-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <circle cx="20" cy="20" r="17.5" stroke="#191970" />
+          <path d="M7 21h7l4-9 5 17 4-10h6" stroke="#44A1A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M20 2.5v5M20 32.5v5" stroke="#78CDD7" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+        <span>EquinoxAI</span>
+      </a>
+      <a class="back-link" href="/">← Back to home</a>
+    </header>
+
+    <main class="shell">
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">Ticker-specific ONNX inference</p>
+        <h1 id="page-title">Explore the outlook.</h1>
+        <p>Sign in to your Veritas account to request an experimental next-weekday return estimate.</p>
+      </section>
+
+      <section id="auth-panel" class="panel" aria-labelledby="auth-title" hidden>
+        <h2 id="auth-title">Welcome back</h2>
+        <p id="auth-copy" class="panel-copy">Sign in to continue to the inference workspace.</p>
+        <div class="auth-tabs" role="tablist" aria-label="Account access">
+          <button class="auth-tab" id="login-tab" type="button" role="tab" aria-selected="true" aria-controls="auth-form" data-mode="login">Log in</button>
+          <button class="auth-tab" id="register-tab" type="button" role="tab" aria-selected="false" aria-controls="auth-form" data-mode="register">Create account</button>
+        </div>
+        <form id="auth-form">
+          <div class="field" id="username-field">
+            <label for="username">Username</label>
+            <input id="username" name="username" type="text" autocomplete="username" required maxlength="80">
+          </div>
+          <div class="field" id="email-field" hidden>
+            <label for="email">Email address</label>
+            <input id="email" name="email" type="email" autocomplete="email" maxlength="254">
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+          </div>
+          <button id="auth-submit" class="button button-full" type="submit">Log in</button>
+          <p id="auth-message" class="message" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section id="checking-panel" class="panel" aria-live="polite">
+        <p id="checking-message" class="loading">Checking your Veritas session…</p>
+        <button id="retry-session" class="button button-secondary button-full" type="button" hidden>Try again</button>
+      </section>
+
+      <section id="app-panel" class="panel app-panel" aria-labelledby="workspace-title" hidden>
+        <div class="account-row">
+          <div>
+            <p class="account-label">Signed in as</p>
+            <p id="account-name" class="account-name"></p>
+          </div>
+          <button id="logout-button" class="button button-secondary" type="button">Log out</button>
+        </div>
+        <h2 id="workspace-title">Run a ticker forecast</h2>
+        <p class="panel-copy">Enter a supported ticker or full model symbol. Tickers are case-insensitive.</p>
+        <form id="infer-form" class="ticker-form">
+          <div class="field">
+            <label for="ticker">Ticker or model symbol</label>
+            <input id="ticker" name="ticker" type="text" placeholder="e.g. AAPL or AAPL.US" autocomplete="off" required maxlength="32" pattern="[A-Za-z0-9._-]+">
+          </div>
+          <button id="infer-button" class="button" type="submit">Get estimate <span aria-hidden="true">→</span></button>
+        </form>
+        <p class="ticker-hint">Available models: AAPL, AMZN, JNJ.</p>
+        <p id="infer-message" class="message" role="status" aria-live="polite"></p>
+        <article id="result-card" class="result" aria-live="polite" hidden>
+          <div class="result-top">
+            <h3 id="result-symbol" class="result-symbol"></h3>
+            <span id="result-action" class="action-badge"></span>
+          </div>
+          <div class="result-grid">
+            <div class="metric"><span>Predicted return</span><strong id="predicted-return"></strong></div>
+            <div class="metric"><span>Current close</span><strong id="current-close"></strong></div>
+            <div class="metric"><span>Estimated close</span><strong id="estimated-close"></strong></div>
+            <div class="metric"><span>Last analyzed</span><strong id="last-analyzed"></strong></div>
+            <div class="metric"><span>Predicted day</span><strong id="predicted-day"></strong></div>
+          </div>
+          <p id="disclaimer" class="disclaimer"></p>
+        </article>
+      </section>
+    </main>
+    <footer>Experimental historical-data model; not financial advice.</footer>
+
+    <script>
+      (() => {
+        const API_BASE_URL = "https://veritas.adam-towfek.workers.dev";
+        const authPanel = document.getElementById("auth-panel");
+        const checkingPanel = document.getElementById("checking-panel");
+        const appPanel = document.getElementById("app-panel");
+        const authForm = document.getElementById("auth-form");
+        const authMessage = document.getElementById("auth-message");
+        const authCopy = document.getElementById("auth-copy");
+        const authSubmit = document.getElementById("auth-submit");
+        const usernameInput = document.getElementById("username");
+        const emailInput = document.getElementById("email");
+        const passwordInput = document.getElementById("password");
+        const usernameField = document.getElementById("username-field");
+        const emailField = document.getElementById("email-field");
+        const tabs = Array.from(document.querySelectorAll(".auth-tab"));
+        let authMode = "login";
+
+        async function request(path, options) {
+          const response = await fetch(API_BASE_URL + path, {
+            ...options,
+            credentials: "include",
+            headers: {
+              ...(options && options.headers ? options.headers : {}),
+              ...(options && options.body ? { "Content-Type": "application/json" } : {})
+            }
+          });
+          let data = {};
+          const responseText = await response.text();
+          if (responseText) {
+            try {
+              data = JSON.parse(responseText);
+            } catch (error) {
+              if (response.ok) throw new Error("The API returned an unreadable response.");
+            }
+          }
+          if (!response.ok) {
+            const error = new Error((data && (data.error || data.message)) || "The request could not be completed. Please try again.");
+            error.status = response.status;
+            throw error;
+          }
+          return data;
+        }
+
+        function showAuth(message, isError) {
+          checkingPanel.hidden = true;
+          appPanel.hidden = true;
+          authPanel.hidden = false;
+          authMessage.textContent = message || "";
+          authMessage.classList.toggle("success", Boolean(message) && !isError);
+        }
+
+        function showApp(user) {
+          checkingPanel.hidden = true;
+          authPanel.hidden = true;
+          appPanel.hidden = false;
+          document.getElementById("account-name").textContent =
+            user && (user.username || user.email) ? (user.username || user.email) : "Your account";
+        }
+
+        async function checkSession() {
+          checkingPanel.hidden = false;
+          document.getElementById("checking-message").textContent = "Checking your Veritas session…";
+          document.getElementById("retry-session").hidden = true;
+          authPanel.hidden = true;
+          appPanel.hidden = true;
+          try {
+            const data = await request("/me", { method: "GET" });
+            if (data.authenticated === false || data.user === null) {
+              showAuth("");
+              return;
+            }
+            showApp(data.user || data);
+          } catch (error) {
+            if (error.status === 401 || /unauthorized|not authenticated|no active session/i.test(error.message)) {
+              showAuth("");
+              return;
+            }
+            document.getElementById("checking-message").textContent =
+              "Could not verify your session. Check your connection and try again.";
+            document.getElementById("retry-session").hidden = false;
+          }
+        }
+
+        function setAuthMode(mode) {
+          authMode = mode;
+          const isRegister = mode === "register";
+          tabs.forEach((tab) => tab.setAttribute("aria-selected", String(tab.dataset.mode === mode)));
+          document.getElementById("auth-title").textContent = isRegister ? "Create your account" : "Welcome back";
+          authCopy.textContent = isRegister
+            ? "Register with a username, valid email address, and password. You’ll be signed in right away."
+            : "Sign in to continue to the inference workspace.";
+          emailField.hidden = !isRegister;
+          emailInput.required = isRegister;
+          passwordInput.autocomplete = isRegister ? "new-password" : "current-password";
+          authSubmit.textContent = isRegister ? "Create account" : "Log in";
+          authMessage.textContent = "";
+          authMessage.classList.remove("success");
+        }
+
+        tabs.forEach((tab) => tab.addEventListener("click", () => setAuthMode(tab.dataset.mode)));
+        authForm.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          authMessage.textContent = "";
+          authMessage.classList.remove("success");
+          authSubmit.disabled = true;
+          authSubmit.textContent = authMode === "register" ? "Creating account…" : "Signing in…";
+          const payload = {
+            username: usernameInput.value.trim(),
+            password: passwordInput.value
+          };
+          if (authMode === "register") payload.email = emailInput.value.trim();
+          try {
+            await request(authMode === "register" ? "/register" : "/login", {
+              method: "POST",
+              body: JSON.stringify(payload)
+            });
+            passwordInput.value = "";
+            await checkSession();
+            if (!appPanel.hidden) {
+              document.getElementById("ticker").focus();
+            } else if (!authPanel.hidden) {
+              showAuth("Credentials were accepted, but no active session was found. Please log in.", true);
+            }
+          } catch (error) {
+            showAuth(error.message, true);
+          } finally {
+            authSubmit.disabled = false;
+            authSubmit.textContent = authMode === "register" ? "Create account" : "Log in";
+          }
+        });
+
+        document.getElementById("retry-session").addEventListener("click", checkSession);
+
+        document.getElementById("logout-button").addEventListener("click", async (event) => {
+          const button = event.currentTarget;
+          button.disabled = true;
+          try {
+            await request("/logout", { method: "POST" });
+            showAuth("You have been logged out.", false);
+          } catch (error) {
+            document.getElementById("infer-message").textContent = error.message;
+          } finally {
+            button.disabled = false;
+          }
+        });
+
+        document.getElementById("infer-form").addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const ticker = document.getElementById("ticker").value.trim();
+          const button = document.getElementById("infer-button");
+          const message = document.getElementById("infer-message");
+          const resultCard = document.getElementById("result-card");
+          message.textContent = "";
+          message.classList.remove("success");
+          resultCard.hidden = true;
+          button.disabled = true;
+          button.textContent = "Analyzing…";
+          try {
+            const result = await request("/infer/" + encodeURIComponent(ticker), { method: "GET" });
+            document.getElementById("result-symbol").textContent = result.symbol;
+            const action = document.getElementById("result-action");
+            action.textContent = result.action;
+            action.className = "action-badge";
+            if (result.action === "SELL") action.classList.add("sell");
+            if (result.action === "DO NOTHING") action.classList.add("neutral");
+            document.getElementById("predicted-return").textContent =
+              (Number(result.predictedReturn) * 100).toFixed(2) + "%";
+            document.getElementById("current-close").textContent = Number(result.currentClose).toFixed(2);
+            document.getElementById("estimated-close").textContent = Number(result.estimatedClose).toFixed(2);
+            document.getElementById("last-analyzed").textContent = result.lastAnalyzedDay;
+            document.getElementById("predicted-day").textContent = result.predictedDay;
+            document.getElementById("disclaimer").textContent =
+              result.disclaimer || "Experimental historical-data model; not financial advice.";
+            resultCard.hidden = false;
+          } catch (error) {
+            message.textContent = error.message;
+            if (error.status === 401 || /unauthorized|not authenticated|no active session/i.test(error.message)) {
+              await checkSession();
+            }
+          } finally {
+            button.disabled = false;
+            button.innerHTML = 'Get estimate <span aria-hidden="true">→</span>';
+          }
+        });
+
+        usernameField.hidden = false;
+        setAuthMode("login");
+        checkSession();
+      })();
+    </script>
+  </body>
 </html>
