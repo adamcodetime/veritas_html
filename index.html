@@ -58,6 +58,7 @@
         transition: color .2s ease;
       }
       .nav a:hover { color: var(--ink); }
+      .nav .nav-auth { color: var(--ink); font-weight: 600; }
       .nav .nav-cta {
         padding: 11px 17px;
         border: 1px solid rgba(25, 25, 112, .22);
@@ -359,6 +360,7 @@
         .nav { gap: 15px; }
         .nav a { font-size: 11px; }
         .nav .nav-cta { padding: 9px 11px; }
+        .nav .nav-secondary, .nav .nav-source { display: none; }
         .hero { min-height: 0; padding-block: 57px 58px; }
         h1 { font-size: clamp(45px, 12vw, 60px); letter-spacing: -2.7px; }
         .hero-copy { font-size: 14px; }
@@ -384,6 +386,13 @@
         .about-mark svg { width: 85px; height: 85px; }
         .footer-row { align-items: flex-start; flex-direction: column; }
       }
+      @media (max-width: 360px) {
+        .brand { gap: 6px; font-size: 16px; }
+        .brand-mark { width: 26px; height: 26px; }
+        .nav { gap: 8px; }
+        .nav a { font-size: 10px; }
+        .nav .nav-cta { padding: 8px 9px; }
+      }
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
       }
@@ -391,7 +400,7 @@
   </head>
   <body>
     <header class="shell topbar">
-      <a class="brand" href="/" aria-label="EquinoxAI home">
+      <a class="brand" href="index.html" aria-label="EquinoxAI home">
         <svg class="brand-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
           <circle cx="20" cy="20" r="17.5" stroke="#191970" />
           <path d="M7 21h7l4-9 5 17 4-10h6" stroke="#44A1A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -400,9 +409,11 @@
         <span>EquinoxAI</span>
       </a>
       <nav class="nav" aria-label="Main navigation">
-        <a href="#approach">Our approach</a>
-        <a href="#about">About</a>
-        <a class="nav-cta" href="https://github.com/adamcodetime/VERITAS_HACKATHON" target="_blank" rel="noopener noreferrer">View source <span aria-hidden="true">↗</span></a>
+        <a class="nav-secondary" href="#approach">Our approach</a>
+        <a class="nav-secondary" href="#about">About</a>
+        <a class="nav-auth" href="try.html?mode=login">Log in</a>
+        <a class="nav-cta nav-auth" href="try.html?mode=register">Register</a>
+        <a class="nav-source" href="https://github.com/adamcodetime/VERITAS_HACKATHON" target="_blank" rel="noopener noreferrer">View source <span aria-hidden="true">↗</span></a>
       </nav>
     </header>
 
@@ -413,7 +424,7 @@
           <h1 id="hero-title">A clearer view of <em>what's next.</em></h1>
           <p class="hero-copy">EquinoxAI looks to more than five decades of market history to explore what may come next. Historical data, thoughtful modeling, and fast ONNX inference—brought together in one approachable experience.</p>
           <div class="actions">
-            <a class="button button-primary" href="/try.html">Try it yourself
+            <a class="button button-primary" href="try.html">Try it yourself
               <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
             </a>
             <a class="button button-secondary" href="https://github.com/adamcodetime/VERITAS_HACKATHON" target="_blank" rel="noopener noreferrer">Explore the source <span aria-hidden="true">↗</span></a>
@@ -494,7 +505,7 @@
           <p class="eyebrow">A first look</p>
           <h2 id="demo-title">See EquinoxAI in action.</h2>
           <p>Our project demo video is on its way. In the meantime, explore the source or try the experience for yourself.</p>
-          <a class="button button-primary" href="/try.html">Explore the project <span aria-hidden="true">→</span></a>
+          <a class="button button-primary" href="try.html">Explore the project <span aria-hidden="true">→</span></a>
         </div>
         <div class="video-card" role="img" aria-label="Demo video coming soon">
           <span class="play-button" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="m5 3 8 5-8 5V3Z" fill="currentColor"/></svg></span>
@@ -525,7 +536,7 @@
 
     <footer>
       <div class="shell footer-row">
-        <a class="brand" href="/" aria-label="EquinoxAI home">
+        <a class="brand" href="index.html" aria-label="EquinoxAI home">
           <svg class="brand-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
             <circle cx="20" cy="20" r="17.5" stroke="#191970" />
             <path d="M7 21h7l4-9 5 17 4-10h6" stroke="#44A1A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
