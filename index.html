@@ -58,14 +58,6 @@
         transition: color .2s ease;
       }
       .nav a:hover { color: var(--ink); }
-      .nav .nav-auth { color: var(--ink); font-weight: 600; }
-      .nav .nav-cta {
-        padding: 11px 17px;
-        border: 1px solid rgba(25, 25, 112, .22);
-        border-radius: 5px;
-        color: var(--ink);
-        font-weight: 600;
-      }
 
       .hero {
         position: relative;
@@ -359,7 +351,6 @@
         .topbar { height: 70px; }
         .nav { gap: 15px; }
         .nav a { font-size: 11px; }
-        .nav .nav-cta { padding: 9px 11px; }
         .nav .nav-secondary, .nav .nav-source { display: none; }
         .hero { min-height: 0; padding-block: 57px 58px; }
         h1 { font-size: clamp(45px, 12vw, 60px); letter-spacing: -2.7px; }
@@ -391,7 +382,6 @@
         .brand-mark { width: 26px; height: 26px; }
         .nav { gap: 8px; }
         .nav a { font-size: 10px; }
-        .nav .nav-cta { padding: 8px 9px; }
       }
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
@@ -411,8 +401,6 @@
       <nav class="nav" aria-label="Main navigation">
         <a class="nav-secondary" href="#approach">Our approach</a>
         <a class="nav-secondary" href="#about">About</a>
-        <a class="nav-auth" href="try.html?mode=login">Log in</a>
-        <a class="nav-cta nav-auth" href="try.html?mode=register">Register</a>
         <a class="nav-source" href="https://github.com/adamcodetime/VERITAS_HACKATHON" target="_blank" rel="noopener noreferrer">View source <span aria-hidden="true">↗</span></a>
       </nav>
     </header>

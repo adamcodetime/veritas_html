@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#fffffa">
-    <meta name="description" content="Sign in to EquinoxAI and explore ticker-specific stock-return predictions.">
+    <meta name="description" content="Explore ticker-specific stock-return predictions with EquinoxAI.">
     <title>EquinoxAI — Try it yourself</title>
     <style>
       :root {
@@ -31,7 +31,7 @@
         font-family: var(--sans);
         -webkit-font-smoothing: antialiased;
       }
-      button, input { font: inherit; }
+      button, input, select { font: inherit; }
       .shell { width: min(1050px, calc(100% - 48px)); margin-inline: auto; }
       .topbar {
         height: 78px;
@@ -99,30 +99,6 @@
         font-weight: 650;
       }
       .panel-copy { margin-bottom: 23px; color: #7a7f82; font-size: 12px; line-height: 1.65; }
-      .auth-tabs {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 4px;
-        margin-bottom: 22px;
-        padding: 4px;
-        border-radius: 5px;
-        background: #f2f4f0;
-      }
-      .auth-tab {
-        min-height: 38px;
-        border: 0;
-        border-radius: 4px;
-        background: transparent;
-        color: #73777b;
-        cursor: pointer;
-        font-size: 12px;
-        font-weight: 600;
-      }
-      .auth-tab[aria-selected="true"] {
-        background: white;
-        box-shadow: 0 1px 5px rgba(25, 25, 112, .1);
-        color: var(--ink);
-      }
       .field { margin-bottom: 17px; }
       .field label {
         display: block;
@@ -131,7 +107,7 @@
         font-size: 11px;
         font-weight: 650;
       }
-      .field input {
+      .field input, .field select {
         width: 100%;
         min-height: 45px;
         padding: 0 12px;
@@ -142,7 +118,7 @@
         color: var(--charcoal);
         font-size: 13px;
       }
-      .field input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(68, 161, 160, .13); }
+      .field input:focus, .field select:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(68, 161, 160, .13); }
       .button {
         min-height: 46px;
         display: inline-flex;
@@ -162,13 +138,6 @@
       .button:hover:not(:disabled) { transform: translateY(-1px); background: #22228c; }
       .button:disabled { cursor: wait; opacity: .65; }
       .button-full { width: 100%; margin-top: 4px; }
-      .button-secondary {
-        min-height: 37px;
-        border-color: #dfe2df;
-        background: white;
-        color: var(--ink);
-      }
-      .button-secondary:hover:not(:disabled) { background: #f7faf8; }
       .message {
         min-height: 18px;
         margin: 14px 0 0;
@@ -178,18 +147,6 @@
       }
       .message.success { color: #287c68; }
       [hidden] { display: none !important; }
-      .app-panel { width: min(100%, 700px); }
-      .account-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 15px;
-        margin-bottom: 27px;
-        padding-bottom: 19px;
-        border-bottom: 1px solid #edf0ec;
-      }
-      .account-label { margin-bottom: 4px; color: #919698; font-size: 10px; text-transform: uppercase; letter-spacing: .9px; }
-      .account-name { margin: 0; color: var(--ink); font-size: 13px; font-weight: 650; }
       .ticker-form { display: flex; align-items: end; gap: 11px; }
       .ticker-form .field { flex: 1; margin: 0; }
       .ticker-form .button { min-width: 130px; }
@@ -261,57 +218,24 @@
       <section class="intro" aria-labelledby="page-title">
         <p class="eyebrow">Ticker-specific ONNX inference</p>
         <h1 id="page-title">Explore the outlook.</h1>
-        <p>Sign in to your Veritas account to request an experimental next-weekday return estimate.</p>
+        <p>Select a company to run its ONNX model and request an experimental next-weekday return estimate.</p>
       </section>
 
-      <section id="auth-panel" class="panel" aria-labelledby="auth-title" hidden>
-        <h2 id="auth-title">Welcome back</h2>
-        <p id="auth-copy" class="panel-copy">Sign in to continue to the inference workspace.</p>
-        <div class="auth-tabs" role="tablist" aria-label="Account access">
-          <button class="auth-tab" id="login-tab" type="button" role="tab" aria-selected="true" aria-controls="auth-form" data-mode="login">Log in</button>
-          <button class="auth-tab" id="register-tab" type="button" role="tab" aria-selected="false" aria-controls="auth-form" data-mode="register">Create account</button>
-        </div>
-        <form id="auth-form">
-          <div class="field" id="username-field">
-            <label for="username">Username</label>
-            <input id="username" name="username" type="text" autocomplete="username" required maxlength="80">
-          </div>
-          <div class="field" id="email-field" hidden>
-            <label for="email">Email address</label>
-            <input id="email" name="email" type="email" autocomplete="email" maxlength="254">
-          </div>
-          <div class="field">
-            <label for="password">Password</label>
-            <input id="password" name="password" type="password" autocomplete="current-password" required>
-          </div>
-          <button id="auth-submit" class="button button-full" type="submit">Log in</button>
-          <p id="auth-message" class="message" role="status" aria-live="polite"></p>
-        </form>
-      </section>
-
-      <section id="checking-panel" class="panel" aria-live="polite">
-        <p id="checking-message" class="loading">Checking your Veritas session…</p>
-        <button id="retry-session" class="button button-secondary button-full" type="button" hidden>Try again</button>
-      </section>
-
-      <section id="app-panel" class="panel app-panel" aria-labelledby="workspace-title" hidden>
-        <div class="account-row">
-          <div>
-            <p class="account-label">Signed in as</p>
-            <p id="account-name" class="account-name"></p>
-          </div>
-          <button id="logout-button" class="button button-secondary" type="button">Log out</button>
-        </div>
+      <section class="panel" aria-labelledby="workspace-title">
         <h2 id="workspace-title">Run a ticker forecast</h2>
-        <p class="panel-copy">Enter a supported ticker or full model symbol. Tickers are case-insensitive.</p>
+        <p class="panel-copy">Choose one of the available companies. Tickers are matched to their trained ONNX models.</p>
         <form id="infer-form" class="ticker-form">
           <div class="field">
-            <label for="ticker">Ticker or model symbol</label>
-            <input id="ticker" name="ticker" type="text" placeholder="e.g. AAPL or AAPL.US" autocomplete="off" required maxlength="32" pattern="[A-Za-z0-9._-]+">
+            <label for="ticker">Company</label>
+            <select id="ticker" name="ticker" required>
+              <option value="" selected disabled>Select a company</option>
+              <option value="AAPL">Apple (AAPL)</option>
+              <option value="AMZN">Amazon (AMZN)</option>
+              <option value="JNJ">Johnson &amp; Johnson (JNJ)</option>
+            </select>
           </div>
-          <button id="infer-button" class="button" type="submit">Get estimate <span aria-hidden="true">→</span></button>
+          <button id="infer-button" class="button" type="submit">Run forecast <span aria-hidden="true">→</span></button>
         </form>
-        <p class="ticker-hint">Available models: AAPL, AMZN, JNJ.</p>
         <p id="infer-message" class="message" role="status" aria-live="polite"></p>
         <article id="result-card" class="result" aria-live="polite" hidden>
           <div class="result-top">
@@ -334,25 +258,10 @@
     <script>
       (() => {
         const API_BASE_URL = "https://veritas.adam-towfek.workers.dev";
-        const authPanel = document.getElementById("auth-panel");
-        const checkingPanel = document.getElementById("checking-panel");
-        const appPanel = document.getElementById("app-panel");
-        const authForm = document.getElementById("auth-form");
-        const authMessage = document.getElementById("auth-message");
-        const authCopy = document.getElementById("auth-copy");
-        const authSubmit = document.getElementById("auth-submit");
-        const usernameInput = document.getElementById("username");
-        const emailInput = document.getElementById("email");
-        const passwordInput = document.getElementById("password");
-        const usernameField = document.getElementById("username-field");
-        const emailField = document.getElementById("email-field");
-        const tabs = Array.from(document.querySelectorAll(".auth-tab"));
-        let authMode = "login";
 
         async function request(path, options) {
           const response = await fetch(API_BASE_URL + path, {
             ...options,
-            credentials: "include",
             headers: {
               ...(options && options.headers ? options.headers : {}),
               ...(options && options.body ? { "Content-Type": "application/json" } : {})
@@ -375,110 +284,6 @@
           return data;
         }
 
-        function showAuth(message, isError) {
-          checkingPanel.hidden = true;
-          appPanel.hidden = true;
-          authPanel.hidden = false;
-          authMessage.textContent = message || "";
-          authMessage.classList.toggle("success", Boolean(message) && !isError);
-        }
-
-        function showApp(user) {
-          checkingPanel.hidden = true;
-          authPanel.hidden = true;
-          appPanel.hidden = false;
-          document.getElementById("account-name").textContent =
-            user && (user.username || user.email) ? (user.username || user.email) : "Your account";
-        }
-
-        async function checkSession() {
-          checkingPanel.hidden = false;
-          document.getElementById("checking-message").textContent = "Checking your Veritas session…";
-          document.getElementById("retry-session").hidden = true;
-          authPanel.hidden = true;
-          appPanel.hidden = true;
-          try {
-            const data = await request("/me", { method: "GET" });
-            if (data.authenticated === false || data.user === null) {
-              showAuth("");
-              return;
-            }
-            showApp(data.user || data);
-          } catch (error) {
-            if (error.status === 401 || /unauthorized|not authenticated|no active session/i.test(error.message)) {
-              showAuth("");
-              return;
-            }
-            document.getElementById("checking-message").textContent =
-              "Could not verify your session. Check your connection and try again.";
-            document.getElementById("retry-session").hidden = false;
-          }
-        }
-
-        function setAuthMode(mode) {
-          authMode = mode;
-          const isRegister = mode === "register";
-          tabs.forEach((tab) => tab.setAttribute("aria-selected", String(tab.dataset.mode === mode)));
-          document.getElementById("auth-title").textContent = isRegister ? "Create your account" : "Welcome back";
-          authCopy.textContent = isRegister
-            ? "Create an account with a username, valid email address, and a password of at least 12 characters. You’ll be signed in right away."
-            : "Sign in to continue to the inference workspace.";
-          emailField.hidden = !isRegister;
-          emailInput.required = isRegister;
-          passwordInput.autocomplete = isRegister ? "new-password" : "current-password";
-          passwordInput.minLength = isRegister ? 12 : 0;
-          authSubmit.textContent = isRegister ? "Create account" : "Log in";
-          authMessage.textContent = "";
-          authMessage.classList.remove("success");
-        }
-
-        tabs.forEach((tab) => tab.addEventListener("click", () => setAuthMode(tab.dataset.mode)));
-        authForm.addEventListener("submit", async (event) => {
-          event.preventDefault();
-          authMessage.textContent = "";
-          authMessage.classList.remove("success");
-          authSubmit.disabled = true;
-          authSubmit.textContent = authMode === "register" ? "Creating account…" : "Signing in…";
-          const payload = {
-            username: usernameInput.value.trim(),
-            password: passwordInput.value
-          };
-          if (authMode === "register") payload.email = emailInput.value.trim();
-          try {
-            await request(authMode === "register" ? "/register" : "/login", {
-              method: "POST",
-              body: JSON.stringify(payload)
-            });
-            passwordInput.value = "";
-            await checkSession();
-            if (!appPanel.hidden) {
-              document.getElementById("ticker").focus();
-            } else if (!authPanel.hidden) {
-              showAuth("Credentials were accepted, but no active session was found. Please log in.", true);
-            }
-          } catch (error) {
-            showAuth(error.message, true);
-          } finally {
-            authSubmit.disabled = false;
-            authSubmit.textContent = authMode === "register" ? "Create account" : "Log in";
-          }
-        });
-
-        document.getElementById("retry-session").addEventListener("click", checkSession);
-
-        document.getElementById("logout-button").addEventListener("click", async (event) => {
-          const button = event.currentTarget;
-          button.disabled = true;
-          try {
-            await request("/logout", { method: "POST" });
-            showAuth("You have been logged out.", false);
-          } catch (error) {
-            document.getElementById("infer-message").textContent = error.message;
-          } finally {
-            button.disabled = false;
-          }
-        });
-
         document.getElementById("infer-form").addEventListener("submit", async (event) => {
           event.preventDefault();
           const ticker = document.getElementById("ticker").value.trim();
@@ -489,7 +294,7 @@
           message.classList.remove("success");
           resultCard.hidden = true;
           button.disabled = true;
-          button.textContent = "Analyzing…";
+          button.textContent = "Running model…";
           try {
             const result = await request("/infer/" + encodeURIComponent(ticker), { method: "GET" });
             document.getElementById("result-symbol").textContent = result.symbol;
@@ -509,19 +314,11 @@
             resultCard.hidden = false;
           } catch (error) {
             message.textContent = error.message;
-            if (error.status === 401 || /unauthorized|not authenticated|no active session/i.test(error.message)) {
-              await checkSession();
-            }
           } finally {
             button.disabled = false;
-            button.innerHTML = 'Get estimate <span aria-hidden="true">→</span>';
+            button.innerHTML = 'Run forecast <span aria-hidden="true">→</span>';
           }
         });
-
-        usernameField.hidden = false;
-        const requestedMode = new URLSearchParams(window.location.search).get("mode");
-        setAuthMode(requestedMode === "register" ? "register" : "login");
-        checkSession();
       })();
     </script>
   </body>
