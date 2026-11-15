@@ -157,6 +157,26 @@ Even in a hackathon environment, EquinoxAI implements production-grade web secur
 
 ## 🛠️ Getting Started & Local Development
 
+### Run the local ONNX demo
+
+The ticker demo runs inference in the browser with ONNX Runtime Web. From the repository root, serve the files over HTTP (opening `try.html` directly as a `file://` URL will prevent the browser from loading the model files):
+
+```bash
+python -m http.server 8000
+```
+
+Open `http://localhost:8000/try.html` and choose a ticker. The page loads its prepared 21-feature inputs from `ticker-features.json`; the bundled historical snapshot ends on 2017-11-10. Keep each `.onnx` file beside its matching `.onnx.data` file. The ONNX Runtime Web library and its WebAssembly runtime are loaded from jsDelivr; model inference and model/data-file loading happen in the browser without calling the Cloudflare Worker.
+
+### Publish with GitHub Pages
+
+The site is static and can be published from the repository root:
+
+1. In the repository's **Settings → Pages**, choose **Deploy from a branch**.
+2. Select the branch containing these files and choose the `/(root)` folder, then save.
+3. Open the published site and use its `try.html` page for local browser inference.
+
+Keep all three `.onnx` and their matching `.onnx.data` files in the repository root so the page can load them using relative URLs.
+
 ### Prerequisites
 * [Node.js](https://nodejs.org/) (v18+)
 * [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) (`npm install -g wrangler`)

@@ -218,12 +218,12 @@
       <section class="intro" aria-labelledby="page-title">
         <p class="eyebrow">Ticker-specific ONNX inference</p>
         <h1 id="page-title">Explore the outlook.</h1>
-        <p>Select a company to run its ONNX model and request an experimental next-weekday return estimate.</p>
+        <p>Run a ticker-specific ONNX model directly in your browser using the bundled historical market data.</p>
       </section>
 
       <section class="panel" aria-labelledby="workspace-title">
         <h2 id="workspace-title">Run a ticker forecast</h2>
-        <p class="panel-copy">Choose one of the available companies. Tickers are matched to their trained ONNX models.</p>
+        <p class="panel-copy">Choose a company to run its model against the bundled historical snapshot through November 10, 2017.</p>
         <form id="infer-form" class="ticker-form">
           <div class="field">
             <label for="ticker">Company</label>
@@ -255,33 +255,79 @@
     </main>
     <footer>Experimental historical-data model; not financial advice.</footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.min.js"></script>
     <script>
       (() => {
-        const API_BASE_URL = "https://veritas.adam-towfek.workers.dev";
+        const MODEL_FEATURE_COUNT = 21;
+        const BUY_THRESHOLD = 0.003;
+        const SELL_THRESHOLD = -0.003;
+        const sessions = new Map();
+        const runtime = window.ort;
+        let marketData;
+        if (runtime) {
+          runtime.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/";
+        }
 
-        async function request(path, options) {
-          const response = await fetch(API_BASE_URL + path, {
-            ...options,
-            headers: {
-              ...(options && options.headers ? options.headers : {}),
-              ...(options && options.body ? { "Content-Type": "application/json" } : {})
+        async function getMarketData() {
+          if (!marketData) {
+            const response = await fetch(new URL("ticker-features.json", document.baseURI));
+            if (!response.ok) {
+              throw new Error("Could not load the bundled historical market data.");
             }
+            marketData = await response.json();
+          }
+          return marketData;
+        }
+
+        async function loadSession(ticker) {
+          if (!runtime) {
+            throw new Error("ONNX Runtime Web could not be loaded. Check your internet connection and reload the page.");
+          }
+
+          const modelName = ticker.toLowerCase() + ".onnx";
+          const weightsName = modelName + ".data";
+          const modelUrl = new URL(modelName, document.baseURI);
+          const weightsUrl = new URL(weightsName, document.baseURI);
+          const [modelResponse, weightsResponse] = await Promise.all([
+            fetch(modelUrl),
+            fetch(weightsUrl)
+          ]);
+          if (!modelResponse.ok || !weightsResponse.ok) {
+            throw new Error("Could not load the local ONNX model and weights. Serve this page over HTTP and keep both files beside try.html.");
+          }
+          const [modelBuffer, weightsBuffer] = await Promise.all([
+            modelResponse.arrayBuffer(),
+            weightsResponse.arrayBuffer()
+          ]);
+          return runtime.InferenceSession.create(modelBuffer, {
+            executionProviders: ["wasm"],
+            externalData: [{
+              path: weightsName,
+              data: new Uint8Array(weightsBuffer)
+            }]
           });
-          let data = {};
-          const responseText = await response.text();
-          if (responseText) {
-            try {
-              data = JSON.parse(responseText);
-            } catch (error) {
-              if (response.ok) throw new Error("The API returned an unreadable response.");
-            }
+        }
+
+        function getSession(ticker) {
+          if (!sessions.has(ticker)) {
+            const sessionPromise = loadSession(ticker).catch((error) => {
+              sessions.delete(ticker);
+              throw error;
+            });
+            sessions.set(ticker, sessionPromise);
           }
-          if (!response.ok) {
-            const error = new Error((data && (data.error || data.message)) || "The request could not be completed. Please try again.");
-            error.status = response.status;
-            throw error;
+          return sessions.get(ticker);
+        }
+
+        function nextWeekday(dateString) {
+          const date = new Date(dateString + "T00:00:00Z");
+          if (Number.isNaN(date.getTime())) {
+            throw new Error("The historical data contains an invalid date.");
           }
-          return data;
+          do {
+            date.setUTCDate(date.getUTCDate() + 1);
+          } while (date.getUTCDay() === 0 || date.getUTCDay() === 6);
+          return date.toISOString().slice(0, 10);
         }
 
         document.getElementById("infer-form").addEventListener("submit", async (event) => {
@@ -294,24 +340,49 @@
           message.classList.remove("success");
           resultCard.hidden = true;
           button.disabled = true;
-          button.textContent = "Running model…";
+          button.textContent = "Loading model…";
           try {
-            const result = await request("/infer/" + encodeURIComponent(ticker), { method: "GET" });
-            document.getElementById("result-symbol").textContent = result.symbol;
-            const action = document.getElementById("result-action");
-            action.textContent = result.action;
-            action.className = "action-badge";
-            if (result.action === "SELL") action.classList.add("sell");
-            if (result.action === "DO NOTHING") action.classList.add("neutral");
-            document.getElementById("predicted-return").textContent =
-              (Number(result.predictedReturn) * 100).toFixed(2) + "%";
-            document.getElementById("current-close").textContent = Number(result.currentClose).toFixed(2);
-            document.getElementById("estimated-close").textContent = Number(result.estimatedClose).toFixed(2);
-            document.getElementById("last-analyzed").textContent = result.lastAnalyzedDay;
-            document.getElementById("predicted-day").textContent = result.predictedDay;
+            const [session, data] = await Promise.all([getSession(ticker), getMarketData()]);
+            const tickerData = data.tickers && data.tickers[ticker];
+            if (!tickerData || !Array.isArray(tickerData.features) ||
+                tickerData.features.length !== MODEL_FEATURE_COUNT ||
+                !tickerData.features.every(Number.isFinite) ||
+                !Number.isFinite(tickerData.currentClose) ||
+                typeof tickerData.lastAnalyzedDay !== "string") {
+              throw new Error("No valid local market data is available for this ticker.");
+            }
+            button.textContent = "Running model…";
+            const outputs = await session.run({
+              features: new runtime.Tensor(
+                "float32",
+                Float32Array.from(tickerData.features),
+                [1, MODEL_FEATURE_COUNT]
+              )
+            });
+            const prediction = outputs.predicted_return && outputs.predicted_return.data[0];
+            if (!Number.isFinite(prediction)) {
+              throw new Error("The ONNX model did not return a valid prediction.");
+            }
+            const action = prediction >= BUY_THRESHOLD
+              ? "BUY"
+              : prediction <= SELL_THRESHOLD ? "SELL" : "DO NOTHING";
+            const actionBadge = document.getElementById("result-action");
+            actionBadge.textContent = action;
+            actionBadge.className = "action-badge";
+            if (action === "SELL") actionBadge.classList.add("sell");
+            if (action === "DO NOTHING") actionBadge.classList.add("neutral");
+            document.getElementById("result-symbol").textContent = ticker;
+            document.getElementById("predicted-return").textContent = (prediction * 100).toFixed(2) + "%";
+            document.getElementById("current-close").textContent = tickerData.currentClose.toFixed(2);
+            document.getElementById("estimated-close").textContent =
+              (tickerData.currentClose * (1 + prediction)).toFixed(2);
+            document.getElementById("last-analyzed").textContent = tickerData.lastAnalyzedDay;
+            document.getElementById("predicted-day").textContent = nextWeekday(tickerData.lastAnalyzedDay);
             document.getElementById("disclaimer").textContent =
-              result.disclaimer || "Experimental historical-data model; not financial advice.";
+              "Historical-data model; market holidays are not accounted for. Not financial advice.";
             resultCard.hidden = false;
+            message.textContent = "Inference completed in your browser.";
+            message.classList.add("success");
           } catch (error) {
             message.textContent = error.message;
           } finally {
